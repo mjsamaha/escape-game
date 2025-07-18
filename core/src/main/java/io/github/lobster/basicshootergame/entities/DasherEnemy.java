@@ -9,6 +9,7 @@ public class DasherEnemy extends EnemyEntity {
     
     public DasherEnemy(Vector2 position, Texture texture) {
         super(position, 100f, 70f, texture);
+        this.type = EnemyType.DASHER;
     }
     
     @Override

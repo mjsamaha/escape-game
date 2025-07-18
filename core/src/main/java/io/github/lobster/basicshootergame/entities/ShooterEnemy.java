@@ -13,6 +13,7 @@ public class ShooterEnemy extends EnemyEntity {
     public ShooterEnemy(Vector2 position, Texture texture, List<EnemyLaser> enemyLasers) {
         super(position, 100f, 50f, texture);
         this.enemyLasers = enemyLasers;
+        this.type = EnemyType.SHOOTER;
     }
 	
     @Override
