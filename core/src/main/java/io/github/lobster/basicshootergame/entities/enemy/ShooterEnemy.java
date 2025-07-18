@@ -1,9 +1,11 @@
-package io.github.lobster.basicshootergame.entities;
+package io.github.lobster.basicshootergame.entities.enemy;
 
 import java.util.List;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
+
+import io.github.lobster.basicshootergame.entities.player.PlayerEntity;
 
 public class ShooterEnemy extends EnemyEntity {
 	private float fireCooldown = 1.5f;

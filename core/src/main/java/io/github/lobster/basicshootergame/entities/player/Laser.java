@@ -1,4 +1,4 @@
-package io.github.lobster.basicshootergame.entities;
+package io.github.lobster.basicshootergame.entities.player;
 
 import com.badlogic.gdx.math.Vector2;
 

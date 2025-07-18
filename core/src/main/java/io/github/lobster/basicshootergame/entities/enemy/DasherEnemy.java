@@ -1,7 +1,9 @@
-package io.github.lobster.basicshootergame.entities;
+package io.github.lobster.basicshootergame.entities.enemy;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
+
+import io.github.lobster.basicshootergame.entities.player.PlayerEntity;
 
 public class DasherEnemy extends EnemyEntity {
     private boolean isCharging = false;

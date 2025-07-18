@@ -13,6 +13,13 @@ import java.util.List;
 
 import io.github.lobster.basicshootergame.Main;
 import io.github.lobster.basicshootergame.entities.*;
+import io.github.lobster.basicshootergame.entities.enemy.DasherEnemy;
+import io.github.lobster.basicshootergame.entities.enemy.EnemyEntity;
+import io.github.lobster.basicshootergame.entities.enemy.EnemyLaser;
+import io.github.lobster.basicshootergame.entities.enemy.RusherEnemy;
+import io.github.lobster.basicshootergame.entities.enemy.ShooterEnemy;
+import io.github.lobster.basicshootergame.entities.player.Laser;
+import io.github.lobster.basicshootergame.entities.player.PlayerEntity;
 import io.github.lobster.basicshootergame.managers.LevelManager;
 import io.github.lobster.basicshootergame.managers.ScoreManager;
 

@@ -8,6 +8,11 @@ import java.util.List;
 import java.util.Random;
 
 import io.github.lobster.basicshootergame.entities.*;
+import io.github.lobster.basicshootergame.entities.enemy.DasherEnemy;
+import io.github.lobster.basicshootergame.entities.enemy.EnemyEntity;
+import io.github.lobster.basicshootergame.entities.enemy.EnemyLaser;
+import io.github.lobster.basicshootergame.entities.enemy.RusherEnemy;
+import io.github.lobster.basicshootergame.entities.enemy.ShooterEnemy;
 
 public class LevelManager {
 	private List<EnemyEntity> enemies;
