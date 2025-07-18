@@ -1,17 +1,17 @@
 package io.github.lobster.basicshootergame.screens;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
+
 
 import io.github.lobster.basicshootergame.Main;
 
 import static io.github.lobster.basicshootergame.Constants.*;
+
 
 public class MenuScreen implements Screen {
 	
@@ -27,7 +27,7 @@ public class MenuScreen implements Screen {
 
 	@Override
 	public void show() {
-System.out.println("MenuScreen loaded --");
+		System.out.println("MenuScreen loaded --");
         
         backgroundTexture = new Texture(Gdx.files.internal("graphics/main_menu_bg.png"));
         backgroundTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -51,6 +51,11 @@ System.out.println("MenuScreen loaded --");
 	            false, false
 	        );
 	        batch.end();
+	        
+	        if (Gdx.input.isKeyJustPressed(Input.Keys.ENTER)) {
+	        	System.out.println("Enter pressed -- transitioning to GameScreen...");
+	        	gameMain.setScreen(new GameScreen(gameMain));
+	        }
 	}
 
 	@Override

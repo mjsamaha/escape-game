@@ -1,6 +1,5 @@
 package io.github.lobster.basicshootergame;
 
-import com.badlogic.gdx.physics.bullet.linearmath.int4;
 
 public class Constants {
 	

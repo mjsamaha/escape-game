@@ -1,5 +1,6 @@
 package io.github.lobster.basicshootergame.managers;
 
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
@@ -17,6 +18,18 @@ public class AudioManager {
 	public void playSFX(String sfxPath) {
 		Sound sfxSound = Gdx.audio.newSound(Gdx.files.internal(sfxPath));
 		sfxSound.play(); // manage sfx disposal after use if needed
+	}
+	
+	public void playMusic(String musicPath, boolean loop) {
+		if (backgroundMusic != null) {
+			backgroundMusic.stop();
+			backgroundMusic.dispose();
+		}
+		
+		backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(musicPath));
+		backgroundMusic.setLooping(loop);
+		backgroundMusic.setVolume(0.6f);
+		backgroundMusic.play();
 	}
 	
 	
