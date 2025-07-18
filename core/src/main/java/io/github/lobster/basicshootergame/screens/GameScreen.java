@@ -13,7 +13,8 @@ import java.util.List;
 
 import io.github.lobster.basicshootergame.Main;
 import io.github.lobster.basicshootergame.entities.*;
-import io.github.lobster.basicshootergame.utilities.LevelManager;
+import io.github.lobster.basicshootergame.managers.LevelManager;
+import io.github.lobster.basicshootergame.managers.ScoreManager;
 
 import static io.github.lobster.basicshootergame.Constants.*;
 
@@ -44,6 +45,8 @@ public class GameScreen implements Screen {
     
     private LevelManager levelManager;
     
+    private ScoreManager scoreManager;
+    
     public GameScreen(Main gameMain) {
         this.gameMain = gameMain;
     }
@@ -60,21 +63,24 @@ public class GameScreen implements Screen {
         gameMain.getAudioManager().playMusic("audio/music/DSSongRager.mp3", true);
 
         // Create player
-        playerEntity = new PlayerEntity(new Vector2(WINDOW_WIDTH / 2f - 32, 50));
+        playerEntity = new PlayerEntity(new Vector2(WINDOW_WIDTH / 2f - 32, 50), gameMain.getAudioManager());
 
         // Load enemy textures
         shooterTexture = new Texture("graphics/characters/enemy/enemy1.png");
         dasherTexture = new Texture("graphics/characters/enemy/enemy2.png");
         rusherTexture = new Texture("graphics/characters/enemy/enemy3.png");
+        
+        scoreManager = new ScoreManager();
 
         // Setup lasers
         enemyLaserTexture = new Texture("graphics/objects/enemy_laser.png");
-        enemyLasers = new ArrayList<>();
         
-        levelManager = new LevelManager(enemies, enemyLasers, shooterTexture, dasherTexture, rusherTexture);
 
         // Setup enemies
         enemies = new ArrayList<>();
+        enemyLasers = new ArrayList<>();
+        levelManager = new LevelManager(enemies, enemyLasers, shooterTexture, dasherTexture, rusherTexture);
+
         enemies.add(new ShooterEnemy(new Vector2(100, 500), shooterTexture, enemyLasers));
         enemies.add(new DasherEnemy(new Vector2(300, 500), dasherTexture));
         enemies.add(new RusherEnemy(new Vector2(500, 500), rusherTexture));
@@ -144,6 +150,24 @@ public class GameScreen implements Screen {
 	            for (EnemyEntity enemy : enemies) {
 	                if (enemy.getBoundingRectangle().contains(laserPos)) {
 	                    enemy.takeDamage(50f);  // Adjust damage as you like
+	                    if (enemy.isDead()) {
+	                    	gameMain.getAudioManager().playExplosionSound();
+	                    	
+	                    	switch (enemy.getType()) {
+	                    	case SHOOTER:
+	                    		scoreManager.addScore(75);
+	                    		break;
+	                    	case DASHER:
+	                    	case RUSHER:
+	                    		scoreManager.addScore(50);
+	                    		break;
+	                    	default:
+	                    		scoreManager.addScore(25);
+	                    	}
+	                    	
+	                        System.out.println("Enemy defeated: " + enemy.getType() + ". Total Score: " + scoreManager.getCurrentScore());
+	                    	
+	                    }
 	                    hitEnemy = true;
 	                    break;  // One laser hits one enemy max
 	                }
@@ -159,7 +183,8 @@ public class GameScreen implements Screen {
 	    }
 
 	    // === Render Phase ===
-
+	    
+	   
 	    batch.begin();
 
 	    // Background

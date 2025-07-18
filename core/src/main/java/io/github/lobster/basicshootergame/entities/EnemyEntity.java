@@ -11,12 +11,21 @@ public abstract class EnemyEntity {
 	protected float health;
 	protected Texture texture;
 	
+	public enum EnemyType{
+			SHOOTER, DASHER, RUSHER
+	}
+	
+	protected EnemyType type;
+	
+	
 	public EnemyEntity(Vector2 position, float speed, float health, Texture texture) {
         this.position = position;
         this.speed = speed;
         this.health = health;
         this.texture = texture;
     }
+	
+	
 
     public abstract void update(float delta, PlayerEntity player);
     public abstract void attack(PlayerEntity player);
@@ -42,6 +51,10 @@ public abstract class EnemyEntity {
     
     public boolean isDead() {
         return health <= 0;
+    }
+    
+    public EnemyType getType() {
+		return type;
     }
 
 }

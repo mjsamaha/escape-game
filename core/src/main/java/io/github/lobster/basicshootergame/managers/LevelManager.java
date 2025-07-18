@@ -1,4 +1,4 @@
-package io.github.lobster.basicshootergame.utilities;
+package io.github.lobster.basicshootergame.managers;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.bullet.linearmath.int4;

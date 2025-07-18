@@ -9,6 +9,7 @@ public class RusherEnemy extends EnemyEntity {
     public RusherEnemy(Vector2 position, Texture texture) {
         super(position, 200f, 30f, texture);
         this.velocity = new Vector2(0, -speed); // rush straight down initially
+        this.type = EnemyType.RUSHER;
     }
 
     @Override

@@ -9,6 +9,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import io.github.lobster.basicshootergame.managers.AudioManager;
+
 public class PlayerEntity {
 	private Vector2 position;
 	private float health;
@@ -20,8 +22,11 @@ public class PlayerEntity {
 	
 	private List<Laser> lasers;
 	
-	public PlayerEntity(Vector2 startPos) {
+	private AudioManager audioManager;
+	
+	public PlayerEntity(Vector2 startPos, AudioManager audioManager) {
 		this.position = startPos;
+		this.audioManager = audioManager;
 		this.health = 100f;
 		this.fireCooldown = 0.35f; // ~3 shots per second -- later, when an upgrade happens, we lower/increease dynamicallty
 		this.timeSinceLastShot = 0f;
@@ -77,6 +82,10 @@ public class PlayerEntity {
 
 	        lasers.add(new Laser(spawnPos, mouseWorld));
 	        timeSinceLastShot = 0f;
+	        
+	        if (audioManager != null) {
+	        	audioManager.playBulletSound();
+	        }
 	    }
 	}
 	
