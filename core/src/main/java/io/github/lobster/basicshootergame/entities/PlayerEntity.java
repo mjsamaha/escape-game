@@ -6,6 +6,7 @@ import java.util.List;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public class PlayerEntity {
@@ -26,7 +27,7 @@ public class PlayerEntity {
 		this.timeSinceLastShot = 0f;
 		
 		playerTexture = new Texture("graphics/characters/player/player.png");
-		laserTexture = new Texture("graphics/objects/player_laser.png");
+		laserTexture = new Texture("graphics/objects/player_laser_alt.png");
 		
 		lasers = new ArrayList<>();
 	}
@@ -70,9 +71,9 @@ public class PlayerEntity {
 
 	        // Center of the player
 	        Vector2 spawnPos = new Vector2(
-	            position.x + 32 - 28,
-	            position.y + 32 - 4
-	        );
+	        	    position.x + 32 - 6,  // 32 is half player width, 5 is half laser width
+	        	    position.y + 32 - 6   // similarly for y, to center the laser on player center
+	        	);
 
 	        lasers.add(new Laser(spawnPos, mouseWorld));
 	        timeSinceLastShot = 0f;
@@ -91,16 +92,16 @@ public class PlayerEntity {
 
             // Draw with origin at center for proper rotation
             batch.draw(
-                laserTexture,
-                pos.x, pos.y,
-                28, 4, // originX, originY (half of 56x8)
-                56, 8, // width, height
-                1f, 1f, // scale
-                angleDeg, // rotation
-                0, 0, // srcX, srcY
-                laserTexture.getWidth(), laserTexture.getHeight(), // srcW, srcH
-                false, false // flipX, flipY
-            );
+                    laserTexture,
+                    pos.x, pos.y,
+                    6, 6,       // originX, originY (half of 10x10)
+                    12, 12,     // width, height
+                    1f, 1f,     // scaleX, scaleY
+                    angleDeg,   // rotation angle in degrees
+                    0, 0,       // srcX, srcY
+                    laserTexture.getWidth(), laserTexture.getHeight(),
+                    false, false
+                );
         	
         	
         	
@@ -108,11 +109,20 @@ public class PlayerEntity {
         }
     }
 	
-	public void takeDamage(float amount) {
-		health -= amount;
-		if (health <= 0) {
+	public Rectangle getBoundingRectangle() {
+		return new Rectangle (position.x, position.y, 64, 64);
+	}
+	
+	public void takeDamage(float damage) {
+		health -= damage;
+		if (health <= 0) health = 0; {
 			// game over logic/explosion etc.
 		}
+	}
+	
+	
+	public boolean isAlive() {
+		return health > 0;
 	}
 	
 	public List<Laser> getLasers() {
@@ -126,5 +136,9 @@ public class PlayerEntity {
     public void setFireCooldown(float cooldown) {
         this.fireCooldown = cooldown;
     }
+
+	public float getHealth() {
+		return health;
+	}
 
 }
