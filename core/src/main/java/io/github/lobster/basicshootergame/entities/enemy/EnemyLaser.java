@@ -1,9 +1,12 @@
-package io.github.lobster.basicshootergame.entities;
+package io.github.lobster.basicshootergame.entities.enemy;
 
 import com.badlogic.gdx.math.Vector2;
 
 public class EnemyLaser {
-    private Vector2 position;
+    public static final float ENEMY_LASER_W = 12;
+    public static final float ENEMY_LASER_H = 12;
+	
+	private Vector2 position;
     private Vector2 velocity;
     private float speed = 300f; // maybe slower than player lasers?
 

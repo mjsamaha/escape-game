@@ -1,8 +1,9 @@
-package io.github.lobster.basicshootergame.entities;
+package io.github.lobster.basicshootergame.entities.player;
 
 import com.badlogic.gdx.math.Vector2;
 
 public class Laser {
+	
 	private Vector2 position;
 	private Vector2 velocity;
 	private float speed = 400f;

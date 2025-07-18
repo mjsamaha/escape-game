@@ -1,11 +1,17 @@
-package io.github.lobster.basicshootergame.entities;
+package io.github.lobster.basicshootergame.entities.enemy;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import io.github.lobster.basicshootergame.entities.player.PlayerEntity;
+
 public abstract class EnemyEntity {
+	
+	public static final float ENEMY_W = 32;
+	public static final float ENEMY_H = 32;
+	
 	protected Vector2 position;
 	protected float speed;
 	protected float health;
@@ -31,11 +37,11 @@ public abstract class EnemyEntity {
     public abstract void attack(PlayerEntity player);
     
     public void render(SpriteBatch batch) {
-        batch.draw(texture, position.x, position.y);
+        batch.draw(texture, position.x, position.y, ENEMY_W, ENEMY_H);
     }
     
     public Rectangle getBoundingRectangle() {
-        return new Rectangle(position.x, position.y, 64, 64); // Adjust per enemy sprite
+        return new Rectangle(position.x, position.y, ENEMY_W, ENEMY_H); // Adjust per enemy sprite
     }
 
     public void takeDamage(float amount) {

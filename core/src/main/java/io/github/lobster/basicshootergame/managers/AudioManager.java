@@ -22,7 +22,7 @@ public class AudioManager {
 	}
 	
 	public void playBulletSound() {
-		bulletSound.play(0.6f);
+		bulletSound.play(0.5f);
 	} 
 	
 	public void playExplosionSound() {

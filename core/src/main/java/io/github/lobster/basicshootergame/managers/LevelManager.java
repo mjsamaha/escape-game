@@ -1,13 +1,17 @@
 package io.github.lobster.basicshootergame.managers;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.bullet.linearmath.int4;
 import com.badlogic.gdx.graphics.Texture;
 
 import java.util.List;
 import java.util.Random;
 
 import io.github.lobster.basicshootergame.entities.*;
+import io.github.lobster.basicshootergame.entities.enemy.DasherEnemy;
+import io.github.lobster.basicshootergame.entities.enemy.EnemyEntity;
+import io.github.lobster.basicshootergame.entities.enemy.EnemyLaser;
+import io.github.lobster.basicshootergame.entities.enemy.RusherEnemy;
+import io.github.lobster.basicshootergame.entities.enemy.ShooterEnemy;
 
 public class LevelManager {
 	private List<EnemyEntity> enemies;
