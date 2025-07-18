@@ -29,7 +29,7 @@ public class ShooterEnemy extends EnemyEntity {
     public void attack(PlayerEntity player) {
         if (timeSinceLastShot >= fireCooldown) {
             Vector2 laserStart = new Vector2(position.x + texture.getWidth() / 2f, position.y);
-            Vector2 target = player.getPosition().cpy().add(32, 32); // aim for player's center (assuming 64x64 player)
+            Vector2 target = player.getPosition().cpy().add(PlayerEntity.PLAYER_W, PlayerEntity.PLAYER_H); // aim for player's center (assuming 64x64 player)
             
             EnemyLaser enemyLaser = new EnemyLaser(laserStart, target);
             enemyLasers.add(enemyLaser);

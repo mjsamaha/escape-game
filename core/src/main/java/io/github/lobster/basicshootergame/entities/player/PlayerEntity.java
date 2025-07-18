@@ -12,6 +12,18 @@ import com.badlogic.gdx.math.Vector2;
 import io.github.lobster.basicshootergame.managers.AudioManager;
 
 public class PlayerEntity {
+	
+	public static final float PLAYER_W = 32;
+	public static final float PLAYER_H = 32;
+	
+	public enum ShotMode {
+		SINGLE, DOUBLE, TRIPLE
+	}
+	
+	private boolean powerShot = false;
+	private boolean piercingBullets = false;
+	private ShotMode shotMode = ShotMode.SINGLE;
+	
 	private Vector2 position;
 	private float health;
 	private float fireCooldown;
@@ -49,8 +61,8 @@ public class PlayerEntity {
 		if (Gdx.input.isKeyPressed(com.badlogic.gdx.Input.Keys.D)) position.x += speed * delta;
 		
 		// prevent player to leave screen bounds
-		position.x = Math.max(0,  Math.min(position.x,  800 - 64));
-		position.y = Math.max(0, Math.min(position.y, 600 - 64));
+		position.x = Math.max(0,  Math.min(position.x,  800 - PLAYER_W));
+		position.y = Math.max(0, Math.min(position.y, 600 - PLAYER_H));
 
 
 		
@@ -76,21 +88,58 @@ public class PlayerEntity {
 
 	        // Center of the player
 	        Vector2 spawnPos = new Vector2(
-	        	    position.x + 32 - 6,  // 32 is half player width, 5 is half laser width
-	        	    position.y + 32 - 6   // similarly for y, to center the laser on player center
-	        	);
+	            position.x + PLAYER_W / 2f,  
+	            position.y + PLAYER_H / 2f
+	        );
 
-	        lasers.add(new Laser(spawnPos, mouseWorld));
+	        switch (shotMode) {
+	            case SINGLE:
+	                lasers.add(new Laser(spawnPos, mouseWorld));
+	                break;
+	            case DOUBLE:
+	                // Shoot two lasers slightly offset horizontally
+	                Vector2 offsetLeft = new Vector2(spawnPos.x - 5, spawnPos.y);
+	                Vector2 offsetRight = new Vector2(spawnPos.x + 5, spawnPos.y);
+	                lasers.add(new Laser(offsetLeft, mouseWorld));
+	                lasers.add(new Laser(offsetRight, mouseWorld));
+	                break;
+	            case TRIPLE:
+	                // Shoot three lasers: center, left angle, right angle
+	                lasers.add(new Laser(spawnPos, mouseWorld));
+	                
+	                // Calculate directions for spread
+	                Vector2 dir = new Vector2(mouseWorld).sub(spawnPos).nor();
+
+	                // Rotate vector by small angles for spread
+	                Vector2 leftDir = rotateVector(dir, 15);  // 15 degrees left
+	                Vector2 rightDir = rotateVector(dir, -15); // 15 degrees right
+
+	                lasers.add(new Laser(spawnPos, new Vector2(spawnPos).add(leftDir.scl(100))));
+	                lasers.add(new Laser(spawnPos, new Vector2(spawnPos).add(rightDir.scl(100))));
+	                break;
+	        }
+
 	        timeSinceLastShot = 0f;
-	        
+
 	        if (audioManager != null) {
-	        	audioManager.playBulletSound();
+	            audioManager.playBulletSound();
 	        }
 	    }
 	}
 	
+	// helper method to rotate a vector
+	private Vector2 rotateVector(Vector2 vec, float degrees) {
+		double radians = Math.toRadians(degrees);
+		float cos = (float)Math.cos(radians);
+		float sin = (float)Math.sin(radians);
+		return new Vector2(
+				vec.x * cos - vec.y * sin,
+				vec.x * sin + vec.y * cos
+				);		
+	}
+	
 	public void render(SpriteBatch batch) {
-        batch.draw(playerTexture, position.x, position.y, 64, 64);
+        batch.draw(playerTexture, position.x, position.y, PLAYER_W, PLAYER_H);
         
         for (Laser laser : lasers) {
         	
@@ -119,7 +168,7 @@ public class PlayerEntity {
     }
 	
 	public Rectangle getBoundingRectangle() {
-		return new Rectangle (position.x, position.y, 64, 64);
+		return new Rectangle (position.x, position.y, PLAYER_W, PLAYER_H);
 	}
 	
 	public void takeDamage(float damage) {
@@ -127,6 +176,18 @@ public class PlayerEntity {
 		if (health <= 0) health = 0; {
 			// game over logic/explosion etc.
 		}
+	}
+	
+	public void setPowerShot(boolean powerShot) {
+	    this.powerShot = powerShot;
+	}
+
+	public void setPiercingBullets(boolean piercingBullets) {
+	    this.piercingBullets = piercingBullets;
+	}
+
+	public void setShotMode(ShotMode mode) {
+	    this.shotMode = mode;
 	}
 	
 	

@@ -4,7 +4,9 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
 
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ import io.github.lobster.basicshootergame.entities.enemy.RusherEnemy;
 import io.github.lobster.basicshootergame.entities.enemy.ShooterEnemy;
 import io.github.lobster.basicshootergame.entities.player.Laser;
 import io.github.lobster.basicshootergame.entities.player.PlayerEntity;
+import io.github.lobster.basicshootergame.entities.player.UpgradeEntity;
 import io.github.lobster.basicshootergame.managers.LevelManager;
 import io.github.lobster.basicshootergame.managers.ScoreManager;
 
@@ -39,6 +42,7 @@ public class GameScreen implements Screen {
 	
 	private final Main gameMain;
     private SpriteBatch batch;
+    private BitmapFont font;
 
     private Texture backgroundTexture;
 
@@ -54,6 +58,12 @@ public class GameScreen implements Screen {
     
     private ScoreManager scoreManager;
     
+    private List<UpgradeEntity> upgradeEntities;
+    private Texture upgradeTexture;
+    
+    private boolean isPausedForUpgrade = false;
+    private UpgradeEntity activeUpgrade = null;
+    
     public GameScreen(Main gameMain) {
         this.gameMain = gameMain;
     }
@@ -61,6 +71,8 @@ public class GameScreen implements Screen {
 	@Override
 	public void show() {
 		batch = new SpriteBatch();
+		
+		font = new BitmapFont(); // or looad you own..l maybe later
 
         // Load background
         backgroundTexture = new Texture(Gdx.files.internal("graphics/background_400x300.png"));
@@ -92,109 +104,180 @@ public class GameScreen implements Screen {
         enemies.add(new DasherEnemy(new Vector2(300, 500), dasherTexture));
         enemies.add(new RusherEnemy(new Vector2(500, 500), rusherTexture));
         
+        // setup upgrades
+        upgradeEntities = new ArrayList<>();
+        upgradeTexture = new Texture("graphics/objects/upgrade.png");
+        
 	}
-
+	
 	@Override
 	public void render(float delta) {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 	    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-	    // === Update Phase ===
-
+	    
 	    if (playerEntity.getHealth() > 0) {
-	        playerEntity.update(delta);
-	        
-	        levelManager.update(delta);
-
-	        // Update enemies and handle attacks
-	        for (EnemyEntity enemy : enemies) {
-	            enemy.update(delta, playerEntity);
-
-	            // Shooter shooting logic
-	            if (enemy instanceof ShooterEnemy) {
-	                ShooterEnemy shooter = (ShooterEnemy) enemy;
-	                EnemyLaser laser = shooter.tryShoot(playerEntity);
-	                if (laser != null) {
-	                    enemyLasers.add(laser);
-	                }
-	            }
-
-	            // Check collision with player
-	            if (enemy.getBoundingRectangle().overlaps(playerEntity.getBoundingRectangle())) {
-	                playerEntity.takeDamage(10f); // Example contact damage
-	            }
-	        }
-
-	        // Update enemy lasers and check collision with player
-	        Iterator<EnemyLaser> laserIterator = enemyLasers.iterator();
-	        while (laserIterator.hasNext()) {
-	            EnemyLaser laser = laserIterator.next();
-	            laser.update(delta);
-
-	            Vector2 pos = laser.getPosition();
-
-	            // Remove if off-screen
-	            if (pos.x < 0 || pos.x > WINDOW_WIDTH || pos.y < 0 || pos.y > WINDOW_HEIGHT) {
-	                laserIterator.remove();
-	                continue;
-	            }
-
-	            // Check laser hitting player
-	            if (playerEntity.getBoundingRectangle().contains(pos)) {
-	                playerEntity.takeDamage(5f); // Example laser damage
-	                laserIterator.remove();
-	            }
-	        }
-
-	        // === NEW: Player laser hits enemy collision ===
-	        Iterator<Laser> playerLaserIter = playerEntity.getLasers().iterator();
-	        while (playerLaserIter.hasNext()) {
-	            Laser laser = playerLaserIter.next();
-	            Vector2 laserPos = laser.getPosition();
-
-	            boolean hitEnemy = false;
-
-	            for (EnemyEntity enemy : enemies) {
-	                if (enemy.getBoundingRectangle().contains(laserPos)) {
-	                    enemy.takeDamage(50f);  // Adjust damage as you like
-	                    if (enemy.isDead()) {
-	                    	gameMain.getAudioManager().playExplosionSound();
-	                    	
-	                    	switch (enemy.getType()) {
-	                    	case SHOOTER:
-	                    		scoreManager.addScore(75);
-	                    		break;
-	                    	case DASHER:
-	                    	case RUSHER:
-	                    		scoreManager.addScore(50);
-	                    		break;
-	                    	default:
-	                    		scoreManager.addScore(25);
-	                    	}
-	                    	
-	                        System.out.println("Enemy defeated: " + enemy.getType() + ". Total Score: " + scoreManager.getCurrentScore());
-	                    	
-	                    }
-	                    hitEnemy = true;
-	                    break;  // One laser hits one enemy max
-	                }
-	            }
-
-	            if (hitEnemy) {
-	                playerLaserIter.remove(); // Remove laser on hit
-	            }
-	        }
-
-	        // Remove dead enemies from list
-	        enemies.removeIf(EnemyEntity::isDead);
+	    	updateGameLogic(delta);
+	    }
+	    
+	    renderScene();
+	}
+	
+	public void updateGameLogic(float delta) {
+		if (isPausedForUpgrade) {
+	        handleUpgradeInput();
+	        return; // Skip all updates while waiting for player to choose
 	    }
 
-	    // === Render Phase ===
+	    playerEntity.update(delta);
+	    levelManager.update(delta);
+	    updateUpgrades(delta);
 	    
-	   
-	    batch.begin();
+	    updateEnemies(delta);
+	    updateEnemyLasers(delta);
+	    handlePlayerLaserHits();
+	    
+	    enemies.removeIf(EnemyEntity::isDead);
+	}
+	
+	private void updateUpgrades(float delta) {
+		Iterator<UpgradeEntity> iter = upgradeEntities.iterator();
+		while (iter.hasNext()) {
+			UpgradeEntity upgrade = iter.next();
+			upgrade.update(delta);
+			if (upgrade.checkCollision(playerEntity)) {
+			    if (!isPausedForUpgrade) {
+			        System.out.println("[GameScreen] Setting pause and active upgrade");
+			        isPausedForUpgrade = true;
+			        activeUpgrade = upgrade;
+			    }
+			    break;
+			} else if (upgrade.isCollected()) {
+			    iter.remove();
+			}
+		}
+	}
 
-	    // Background
+	public void updateEnemies(float delta) {
+		for (EnemyEntity enemy : enemies) {
+			enemy.update(delta, playerEntity);
+			
+			// shooter logic
+			if (enemy instanceof ShooterEnemy) {
+				ShooterEnemy shooter = (ShooterEnemy) enemy;
+				EnemyLaser laser = shooter.tryShoot(playerEntity);
+				if (laser != null) {
+					enemyLasers.add(laser);
+				}
+			}
+			
+			// Contact damage
+	        if (enemy.getBoundingRectangle().overlaps(playerEntity.getBoundingRectangle())) {
+	            playerEntity.takeDamage(10f);
+	        }
+		}
+	}
+	
+	public void updateEnemyLasers(float delta) {
+		Iterator<EnemyLaser> laserIterator = enemyLasers.iterator();
+	    while (laserIterator.hasNext()) {
+	        EnemyLaser laser = laserIterator.next();
+	        laser.update(delta);
+
+	        Vector2 pos = laser.getPosition();
+
+	        // Remove if off-screen
+	        if (pos.x < 0 || pos.x > WINDOW_WIDTH || pos.y < 0 || pos.y > WINDOW_HEIGHT) {
+	            laserIterator.remove();
+	            continue;
+	        }
+
+	        // Hit player
+	        if (playerEntity.getBoundingRectangle().contains(pos)) {
+	            playerEntity.takeDamage(5f);
+	            laserIterator.remove();
+	        }
+	    }
+	}
+	
+	private void handleUpgradeInput() {
+		if (activeUpgrade == null) return;
+
+	    if (Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.NUM_1)) {
+	        applyUpgradeChoice(0);
+	    } else if (Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.NUM_2)) {
+	        applyUpgradeChoice(1);
+	    } else if (Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.NUM_3)) {
+	        applyUpgradeChoice(2);
+	    }
+	}
+	
+	private void applyUpgradeChoice(int index) {
+		List<UpgradeEntity.Type> choices = activeUpgrade.getAvailableTypes();
+	    if (index >= 0 && index < choices.size()) {
+	        UpgradeEntity.Type chosen = choices.get(index);
+	        System.out.println("You chose: " + chosen);
+	        activeUpgrade.applyUpgradeTo(playerEntity, chosen);
+	    }
+
+	    activeUpgrade = null;
+	    isPausedForUpgrade = false;
+	}
+	
+	private void handlePlayerLaserHits() {
+		Iterator<Laser> playerLaserIter = playerEntity.getLasers().iterator();
+
+	    while (playerLaserIter.hasNext()) {
+	        Laser laser = playerLaserIter.next();
+	        Vector2 laserPos = laser.getPosition();
+
+	        boolean hitEnemy = false;
+
+	        for (EnemyEntity enemy : enemies) {
+	            if (enemy.getBoundingRectangle().contains(laserPos)) {
+	                enemy.takeDamage(50f);  // Adjust damage as needed
+
+	                if (enemy.isDead()) {
+	                    gameMain.getAudioManager().playExplosionSound();
+
+	                    // Old-school switch, compatible with Java 8+
+	                    switch (enemy.getType()) {
+	                        case SHOOTER:
+	                            scoreManager.addScore(75);
+	                            break;
+	                        case DASHER:
+	                        case RUSHER:
+	                            scoreManager.addScore(50);
+	                            break;
+	                        default:
+	                            scoreManager.addScore(25);
+	                            break;
+	                    }
+
+	                    System.out.println("Enemy defeated: " + enemy.getType() +
+	                            ". Total Score: " + scoreManager.getCurrentScore());
+	                    
+	                    // chance to drop an upgrade
+	                    if (Math.random() < 0.3) {
+	                    	Vector2 upgradePos = new Vector2(enemy.getPosition());
+	                    	upgradeEntities.add(new UpgradeEntity(upgradePos));
+	                    }
+	                }
+
+	                hitEnemy = true;
+	                break; // One laser hits one enemy max
+	            }
+	        }
+
+	        if (hitEnemy) {
+	            playerLaserIter.remove();
+	        }
+	    }
+	}
+	
+	public void renderScene() {
+		batch.begin();
+		
+		// Draw background
 	    batch.draw(backgroundTexture, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	    // Player
@@ -206,14 +289,49 @@ public class GameScreen implements Screen {
 	    for (EnemyEntity enemy : enemies) {
 	        enemy.render(batch);
 	    }
+	    
+	    for (UpgradeEntity upgrade : upgradeEntities) {
+	    	upgrade.render(batch);
+	    }
 
 	    // Enemy Lasers
 	    for (EnemyLaser laser : enemyLasers) {
 	        Vector2 pos = laser.getPosition();
-	        batch.draw(enemyLaserTexture, pos.x, pos.y, 12, 12);
+	        batch.draw(enemyLaserTexture, pos.x, pos.y, EnemyLaser.ENEMY_LASER_H, EnemyLaser.ENEMY_LASER_W);
 	    }
 
 	    batch.end();
+	    
+	    if (isPausedForUpgrade && activeUpgrade != null) {
+	        // Dim background
+	        Gdx.gl.glEnable(GL20.GL_BLEND);
+	        ShapeRenderer shapeRenderer = new ShapeRenderer();
+	        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+	        shapeRenderer.setColor(0, 0, 0, 0.5f); // 50% transparent black
+	        shapeRenderer.rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	        shapeRenderer.end();
+	        shapeRenderer.dispose();
+	        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+	        // Then render upgrade text
+	        renderUpgradeOptions();
+	    }
+	}
+	
+	private void renderUpgradeOptions() {
+		SpriteBatch uiBatch = new SpriteBatch();
+		uiBatch.begin();
+		
+		List<UpgradeEntity.Type> choices = activeUpgrade.getAvailableTypes();
+		
+		for (int i = 0; i < choices.size(); i++) {
+			String text = (i + 1) + ": " + choices.get(i).toString();
+		    font.draw(uiBatch, text, 100, 300 - i * 30); // Better spacing
+		    // better: font.draw(uiBatch, "Choose an upgrade (1-3):", 100, 340);
+		}
+		
+		uiBatch.end();
+		uiBatch.dispose();
 	}
 
 	@Override
@@ -245,6 +363,7 @@ public class GameScreen implements Screen {
         dasherTexture.dispose();
         rusherTexture.dispose();
         enemyLaserTexture.dispose();
+        upgradeTexture.dispose();
 
         // Also dispose player if needed
 	}

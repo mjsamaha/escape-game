@@ -1,7 +1,6 @@
 package io.github.lobster.basicshootergame.managers;
 
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.physics.bullet.linearmath.int4;
 import com.badlogic.gdx.graphics.Texture;
 
 import java.util.List;
