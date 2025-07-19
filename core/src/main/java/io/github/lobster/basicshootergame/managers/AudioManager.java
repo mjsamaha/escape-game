@@ -14,7 +14,7 @@ public class AudioManager {
 	public void init() {
 		backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal("audio/music/ZanderNoriega_Tension.mp3"));
 		backgroundMusic.setLooping(true);
-		backgroundMusic.setVolume(0.6f);
+		backgroundMusic.setVolume(0.4f);
 		backgroundMusic.play();
 		
 		bulletSound = Gdx.audio.newSound(Gdx.files.internal("audio/sounds/bullet.wav"));
@@ -22,11 +22,11 @@ public class AudioManager {
 	}
 	
 	public void playBulletSound() {
-		bulletSound.play(0.5f);
+		bulletSound.play(0.3f);
 	} 
 	
 	public void playExplosionSound() {
-		explosionSound.play(0.8f);
+		explosionSound.play(0.4f);
 	}
 	
 	public void playSFX(String sfxPath) {
@@ -42,7 +42,7 @@ public class AudioManager {
 		
 		backgroundMusic = Gdx.audio.newMusic(Gdx.files.internal(musicPath));
 		backgroundMusic.setLooping(loop);
-		backgroundMusic.setVolume(0.6f);
+		backgroundMusic.setVolume(0.5f);
 		backgroundMusic.play();
 	}
 	

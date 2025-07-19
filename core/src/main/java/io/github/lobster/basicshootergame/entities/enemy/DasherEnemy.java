@@ -1,5 +1,6 @@
 package io.github.lobster.basicshootergame.entities.enemy;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 
@@ -10,7 +11,7 @@ public class DasherEnemy extends EnemyEntity {
     private Vector2 dashTarget;
     
     public DasherEnemy(Vector2 position, Texture texture) {
-        super(position, 100f, 70f, texture);
+        super(position, 100f, 70f, texture, Color.CYAN); // Or any color you want
         this.type = EnemyType.DASHER;
     }
     

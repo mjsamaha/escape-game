@@ -4,12 +4,14 @@ import com.badlogic.gdx.Game;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 
 import io.github.lobster.basicshootergame.managers.AudioManager;
+import io.github.lobster.basicshootergame.managers.ScoreManager;
 import io.github.lobster.basicshootergame.screens.SplashScreen;
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
 public class Main extends Game {
 	
 	private AudioManager audioManager;
+	private ScoreManager scoreManager;
 	
 	private BitmapFont font;
 	
@@ -21,6 +23,11 @@ public class Main extends Game {
     	
         setScreen(new SplashScreen(this)); // this so it can transition later
     
+    }
+    
+    public ScoreManager getScoreManager() {
+    	if (scoreManager == null) scoreManager = new ScoreManager();
+    		return scoreManager;
     }
     
     public BitmapFont getFont() {

@@ -45,6 +45,8 @@ public class SplashScreen implements Screen {
 	@Override
 	public void show() {
 		
+		System.out.println("SplashScreen loaded");
+		
 		// could play a sound, logo animations. etc , but nothing
 		batch = new SpriteBatch();
 		
