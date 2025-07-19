@@ -1,5 +1,6 @@
 package io.github.lobster.basicshootergame.entities.enemy;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
@@ -16,6 +17,7 @@ public abstract class EnemyEntity {
 	protected float speed;
 	protected float health;
 	protected Texture texture;
+	protected Color color; 
 	
 	public enum EnemyType{
 			SHOOTER, DASHER, RUSHER
@@ -24,12 +26,13 @@ public abstract class EnemyEntity {
 	protected EnemyType type;
 	
 	
-	public EnemyEntity(Vector2 position, float speed, float health, Texture texture) {
-        this.position = position;
-        this.speed = speed;
-        this.health = health;
-        this.texture = texture;
-    }
+	public EnemyEntity(Vector2 position, float speed, float health, Texture texture, Color color) {
+	    this.position = position;
+	    this.speed = speed;
+	    this.health = health;
+	    this.texture = texture;
+	    this.color = color;
+	}
 	
 	
 
@@ -61,6 +64,10 @@ public abstract class EnemyEntity {
     
     public EnemyType getType() {
 		return type;
+    }
+    
+    public Color getColor() {
+    	return color;
     }
 
 }

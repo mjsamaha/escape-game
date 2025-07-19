@@ -3,18 +3,21 @@ package io.github.lobster.basicshootergame.screens;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import io.github.lobster.basicshootergame.Main;
-import io.github.lobster.basicshootergame.entities.*;
 import io.github.lobster.basicshootergame.entities.enemy.DasherEnemy;
 import io.github.lobster.basicshootergame.entities.enemy.EnemyEntity;
 import io.github.lobster.basicshootergame.entities.enemy.EnemyLaser;
@@ -24,7 +27,9 @@ import io.github.lobster.basicshootergame.entities.player.Laser;
 import io.github.lobster.basicshootergame.entities.player.PlayerEntity;
 import io.github.lobster.basicshootergame.entities.player.UpgradeEntity;
 import io.github.lobster.basicshootergame.managers.LevelManager;
+import io.github.lobster.basicshootergame.managers.ParticleManager;
 import io.github.lobster.basicshootergame.managers.ScoreManager;
+import io.github.lobster.basicshootergame.utilities.DebugInfo;
 
 import static io.github.lobster.basicshootergame.Constants.*;
 
@@ -39,6 +44,15 @@ import static io.github.lobster.basicshootergame.Constants.*;
 
 
 public class GameScreen implements Screen {
+	
+	private OrthographicCamera camera;
+	private Viewport viewport;
+	
+	private boolean isShaking = false;
+	private float shakeTime = 0f;
+	private float maxShakeTime = 0.5f;
+	private float shakeIntensity = 4f;
+	private final Vector3 originalCameraPos = new Vector3();
 	
 	private final Main gameMain;
     private SpriteBatch batch;
@@ -64,15 +78,35 @@ public class GameScreen implements Screen {
     private boolean isPausedForUpgrade = false;
     private UpgradeEntity activeUpgrade = null;
     
+    private boolean isGameOver = false;
+    
+    private ParticleManager particleManager;
+    private ShapeRenderer shapeRenderer;
+    
+    private DebugInfo debugInfo;
+    
     public GameScreen(Main gameMain) {
         this.gameMain = gameMain;
     }
 
 	@Override
 	public void show() {
+		System.out.println("GameScreen loaded");
 		batch = new SpriteBatch();
 		
 		font = new BitmapFont(); // or looad you own..l maybe later
+		
+		debugInfo = new DebugInfo();
+		
+		shapeRenderer = new ShapeRenderer();
+		particleManager = new ParticleManager();
+		
+		camera = new OrthographicCamera();
+		viewport = new FitViewport(800, 600, camera); // or your actual game width/height
+		viewport.apply();
+		camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0);
+		camera.update();
+		
 
         // Load background
         backgroundTexture = new Texture(Gdx.files.internal("graphics/background_400x300.png"));
@@ -89,7 +123,8 @@ public class GameScreen implements Screen {
         dasherTexture = new Texture("graphics/characters/enemy/enemy2.png");
         rusherTexture = new Texture("graphics/characters/enemy/enemy3.png");
         
-        scoreManager = new ScoreManager();
+        scoreManager = gameMain.getScoreManager();
+        scoreManager.reset();
 
         // Setup lasers
         enemyLaserTexture = new Texture("graphics/objects/enemy_laser.png");
@@ -115,11 +150,50 @@ public class GameScreen implements Screen {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 	    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 	    
-	    if (playerEntity.getHealth() > 0) {
-	    	updateGameLogic(delta);
+	    if (!isGameOver) {
+	        if (playerEntity.getHealth() > 0) {
+	            updateGameLogic(delta);
+	        } else {
+	            System.out.println("GAME OVER -- Score: " + scoreManager.getCurrentScore());
+	            isGameOver = true;
+
+	            // Delay screen change slightly so the final frame renders
+	            Gdx.app.postRunnable(() -> {
+	                gameMain.setScreen(new MenuScreen(gameMain, scoreManager.getCurrentScore()));
+	                dispose();
+	            });
+	        }
 	    }
 	    
+	    if (isShaking) {
+	        shakeTime -= delta;
+	        if (shakeTime > 0) {
+	            float offsetX = (float)(Math.random() - 0.5f) * 2f * shakeIntensity;
+	            float offsetY = (float)(Math.random() - 0.5f) * 2f * shakeIntensity;
+	            camera.position.set(originalCameraPos.x + offsetX, originalCameraPos.y + offsetY, originalCameraPos.z);
+	        } else {
+	            isShaking = false;
+	            camera.position.set(originalCameraPos); // Reset position
+	        }
+	        camera.update(); // Apply the changes!
+	    }
+
 	    renderScene();
+
+	    if (Gdx.input.isKeyJustPressed(com.badlogic.gdx.Input.Keys.F3)) {
+	        debugInfo.toggle();
+	    }
+	}
+	
+	public void triggerShake(float intensity, float duration) {
+		if (!isShaking) {
+	        originalCameraPos.set(camera.position); // Correct!
+		}
+		shakeIntensity = intensity;
+		maxShakeTime = duration;
+		shakeTime = duration;
+		isShaking = true;
+		originalCameraPos.set(camera.position);
 	}
 	
 	public void updateGameLogic(float delta) {
@@ -135,6 +209,8 @@ public class GameScreen implements Screen {
 	    updateEnemies(delta);
 	    updateEnemyLasers(delta);
 	    handlePlayerLaserHits();
+	    
+	    particleManager.update(delta);
 	    
 	    enemies.removeIf(EnemyEntity::isDead);
 	}
@@ -238,6 +314,8 @@ public class GameScreen implements Screen {
 
 	                if (enemy.isDead()) {
 	                    gameMain.getAudioManager().playExplosionSound();
+	                    triggerShake(5f, 0.3f); // shake hard for 0.3 seconds
+	                    particleManager.addEffect(enemy.getPosition().cpy(), enemy.getColor());
 
 	                    // Old-school switch, compatible with Java 8+
 	                    switch (enemy.getType()) {
@@ -275,7 +353,13 @@ public class GameScreen implements Screen {
 	}
 	
 	public void renderScene() {
+		
+		camera.update();
+		batch.setProjectionMatrix(camera.combined);
+		
 		batch.begin();
+		
+				
 		
 		// Draw background
 	    batch.draw(backgroundTexture, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -299,18 +383,34 @@ public class GameScreen implements Screen {
 	        Vector2 pos = laser.getPosition();
 	        batch.draw(enemyLaserTexture, pos.x, pos.y, EnemyLaser.ENEMY_LASER_H, EnemyLaser.ENEMY_LASER_W);
 	    }
+	    
+	    // draw current score in center-top
+	    String scoreText = "Score: " + scoreManager.getCurrentScore();
+	    float textWidth = font.getRegion().getRegionWidth();
+	    font.draw(batch, scoreText, (WINDOW_WIDTH / 2f) - 40, WINDOW_HEIGHT - 20); // adjust
 
 	    batch.end();
+	    
+	    shapeRenderer.setProjectionMatrix(camera.combined);
+	    particleManager.render(shapeRenderer);
+	    
+	    if (debugInfo != null && debugInfo.isEnabled()) {
+	    	batch.begin();
+	    	debugInfo.render(batch, font, Gdx.graphics.getDeltaTime());
+	    	batch.end();
+	    }
 	    
 	    if (isPausedForUpgrade && activeUpgrade != null) {
 	        // Dim background
 	        Gdx.gl.glEnable(GL20.GL_BLEND);
-	        ShapeRenderer shapeRenderer = new ShapeRenderer();
+	        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+
+	        shapeRenderer.setProjectionMatrix(camera.combined);
 	        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 	        shapeRenderer.setColor(0, 0, 0, 0.5f); // 50% transparent black
 	        shapeRenderer.rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 	        shapeRenderer.end();
-	        shapeRenderer.dispose();
+
 	        Gdx.gl.glDisable(GL20.GL_BLEND);
 
 	        // Then render upgrade text
@@ -336,7 +436,9 @@ public class GameScreen implements Screen {
 
 	@Override
 	public void resize(int width, int height) {
-		
+		viewport.update(WINDOW_WIDTH, WINDOW_HEIGHT);  // Correct aspect ratio
+	    camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0);
+	    camera.update();
 	}
 
 	@Override

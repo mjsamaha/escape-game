@@ -2,6 +2,7 @@ package io.github.lobster.basicshootergame.entities.enemy;
 
 import java.util.List;
 
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.math.Vector2;
 
@@ -13,7 +14,7 @@ public class ShooterEnemy extends EnemyEntity {
     private List<EnemyLaser> enemyLasers;  // Reference to game-wide enemy lasers list
 
     public ShooterEnemy(Vector2 position, Texture texture, List<EnemyLaser> enemyLasers) {
-        super(position, 100f, 50f, texture);
+        super(position, 100f, 50f, texture, Color.RED);
         this.enemyLasers = enemyLasers;
         this.type = EnemyType.SHOOTER;
     }
